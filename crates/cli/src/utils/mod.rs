@@ -78,9 +78,20 @@ pub fn subscriber() {
         .init()
 }
 
+/// Determines if a string represents a hexadecimal value.
+fn is_hex(s: &str) -> bool {
+    s.chars().all(|c| c.is_digit(16))
+}
+
 /// parse a hex str or decimal str as U256
-pub fn parse_u256(s: &str) -> Result<U256> {
-    Ok(if s.starts_with("0x") { U256::from_str(s)? } else { U256::from_dec_str(s)? })
+pub fn parse_u256(s: &str) -> Result<U256, &'static str> {
+    if s.starts_with("0x") {
+        U256::from_str(&s[2..]).map_err(|_| "Failed to parse as hex string with 0x prefix")
+    } else if is_hex(s) {
+        U256::from_str(&format!("0x{}", s)).map_err(|_| "Failed to parse as hex string without 0x prefix")
+    } else {
+        U256::from_dec_str(s).map_err(|_| "Failed to parse as a decimal string")
+    }
 }
 
 /// parse a hex str or decimal str as U256
